@@ -123,6 +123,12 @@
                 formError.classList.remove('hidden');
                 return;
             }
+             // **FIX:** Check if the URL is still the placeholder
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || !GOOGLE_SCRIPT_URL) {
+                formError.textContent = 'ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមពិនិត្យមើល GOOGLE_SCRIPT_URL។';
+                formError.classList.remove('hidden');
+                return;
+            }
             formError.classList.add('hidden');
             
             // Save info to local storage
@@ -151,7 +157,7 @@
             scannerUi.classList.remove('hidden');
             displayName.textContent = employeeName;
             
-            if (status.lastAction === 'Checked Out') {
+            if (status.lastAction === 'Check Out') {
                 subtitle.textContent = "អ្នកបាន Check Out រួចរាល់ហើយសម្រាប់ថ្ងៃនេះ";
                 scanButton.textContent = "បាន Check Out រួចរាល់";
                 scanButton.disabled = true;
@@ -215,6 +221,10 @@
         }
 
         async function checkUserStatus(id) {
+            // **FIX:** Added another check here to prevent the error
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || !GOOGLE_SCRIPT_URL) {
+                 throw new Error('Google Script URL is not configured.');
+            }
             const url = new URL(GOOGLE_SCRIPT_URL);
             url.searchParams.append('action', 'checkStatus');
             url.searchParams.append('id', id);
@@ -228,7 +238,7 @@
 
 
         async function saveDataToSheet(scannedData) {
-            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec') {
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec' || !GOOGLE_SCRIPT_URL) {
                 throw new Error('ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមដាក់ URL របស់ Google Apps Script។');
             }
             
@@ -238,7 +248,6 @@
                 scannedText: scannedData
             };
             
-            // Use fetch with cors mode to get the response
             const response = await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'cors',
