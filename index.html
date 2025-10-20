@@ -85,7 +85,7 @@
 
     <script>
         // !!! សំខាន់៖ សូមប្តូរ URL ខាងក្រោមនេះជាមួយ Web App URL ពី Google Apps Script របស់អ្នក !!!
-        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec';
 
         // UI Elements
         const userInfoForm = document.getElementById('user-info-form');
@@ -124,7 +124,7 @@
                 return;
             }
              // **FIX:** Check if the URL is still the placeholder
-            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || !GOOGLE_SCRIPT_URL) {
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec' || !GOOGLE_SCRIPT_URL) {
                 formError.textContent = 'ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមពិនិត្យមើល GOOGLE_SCRIPT_URL។';
                 formError.classList.remove('hidden');
                 return;
@@ -279,5 +279,4 @@
     </script>
 </body>
 </html>
-
 
