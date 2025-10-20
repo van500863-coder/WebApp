@@ -222,7 +222,7 @@
 
         async function checkUserStatus(id) {
             // **FIX:** Added another check here to prevent the error
-            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' || !GOOGLE_SCRIPT_URL) {
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec' || !GOOGLE_SCRIPT_URL) {
                  throw new Error('Google Script URL is not configured.');
             }
             const url = new URL(GOOGLE_SCRIPT_URL);
@@ -279,4 +279,5 @@
     </script>
 </body>
 </html>
+
 
