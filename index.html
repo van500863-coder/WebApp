@@ -4,150 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ប្រព័ន្ធវត្តមានតាម QR Code</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font for Khmer -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- QR Code Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
-        body {
-            font-family: 'Kantumruy Pro', sans-serif;
-        }
+        body { font-family: 'Kantumruy Pro', sans-serif; }
         #reader {
             width: 100%;
             max-width: 500px;
             border: 2px solid #e5e7eb;
             border-radius: 0.5rem;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
         }
-        #reader__dashboard_section_csr button {
-            background-color: #3b82f6 !important;
-            color: white !important;
-            border-radius: 0.375rem !important;
-            padding: 0.5rem 1rem !important;
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
-    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg mx-4">
-        <div class="text-center">
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg mx-auto">
+        <!-- Main Title -->
+        <div class="text-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">ប្រព័ន្ធស្កេនវត្តមាន QR Code</h1>
-            <p class="text-gray-500 mt-2">ចុចប៊ូតុងស្កេន ដើម្បីកត់ត្រាការចូល-ចេញ</p>
+            <p id="subtitle" class="text-gray-500 mt-2">សូមបញ្ចូលព័ត៌មានរបស់អ្នកដើម្បីបន្ត</p>
         </div>
 
-        <!-- Action Buttons -->
-        <div id="action-buttons" class="mt-6 flex justify-center">
-            <button id="scan-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out w-full max-w-xs">
-                ស្កេនវត្តមាន
-            </button>
-        </div>
-        
-        <!-- QR Code Reader Viewport -->
-        <div id="reader" class="hidden"></div>
-        
-        <!-- Results Section -->
-        <div id="result-section" class="mt-6 hidden">
-            <h2 class="text-lg font-semibold text-gray-700">លទ្ធផល៖</h2>
-            <div class="mt-2 p-4 bg-gray-50 rounded-lg border">
-                <p id="status" class="text-gray-600 font-medium">ស្ថានភាព៖ <span class="font-normal">កំពុងរង់ចាំ...</span></p>
-                <p id="scanned-data" class="text-gray-800 font-bold break-all mt-2"></p>
+        <!-- User Info Form -->
+        <div id="user-info-form">
+            <div class="space-y-4">
+                <div>
+                    <label for="employee-id" class="block text-sm font-medium text-gray-700">ID បុគ្គលិក</label>
+                    <input type="text" id="employee-id" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="ឧទាហរណ៍: EMP-001">
+                </div>
+                <div>
+                    <label for="employee-name" class="block text-sm font-medium text-gray-700">ឈ្មោះបុគ្គលិក</label>
+                    <input type="text" id="employee-name" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="ឧទាហរណ៍: សុខ ចាន់ណា">
+                </div>
             </div>
-             <button id="scan-again-button" class="hidden mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out w-full">
-                ស្កេនម្តងទៀត
-            </button>
+            <p id="form-error" class="text-red-500 text-sm mt-2 hidden"></p>
+            <button id="continue-button" class="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">បន្ត</button>
         </div>
+
+        <!-- Scanner UI -->
+        <div id="scanner-ui" class="hidden">
+             <div class="text-center">
+                <p class="font-semibold text-gray-700">សូមស្វាគមន៍, <span id="display-name" class="text-blue-600"></span>!</p>
+            </div>
+            <div id="action-buttons" class="mt-4 flex justify-center">
+                <button id="scan-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 w-full max-w-xs">
+                    ស្កេន Check In
+                </button>
+            </div>
+            <div id="reader" class="hidden mt-4 mx-auto"></div>
+            <div id="result-section" class="mt-4 hidden">
+                <div class="p-4 bg-gray-50 rounded-lg border">
+                    <p id="status" class="text-gray-600 font-medium text-center">ស្ថានភាព៖ <span class="font-normal">កំពុងរង់ចាំ...</span></p>
+                </div>
+            </div>
+            <button id="reset-button" class="mt-4 w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">ផ្លាស់ប្តូរ ID</button>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="hidden items-center justify-center mt-6">
+            <div class="spinner"></div>
+            <p class="ml-4 text-gray-600">កំពុងពិនិត្យវត្តមាន...</p>
+        </div>
+
     </div>
 
     <script>
         // !!! សំខាន់៖ សូមប្តូរ URL ខាងក្រោមនេះជាមួយ Web App URL ពី Google Apps Script របស់អ្នក !!!
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec';
+        const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
 
-        const actionButtonsDiv = document.getElementById('action-buttons');
+        // UI Elements
+        const userInfoForm = document.getElementById('user-info-form');
+        const scannerUi = document.getElementById('scanner-ui');
+        const continueButton = document.getElementById('continue-button');
+        const employeeIdInput = document.getElementById('employee-id');
+        const employeeNameInput = document.getElementById('employee-name');
+        const formError = document.getElementById('form-error');
         const scanButton = document.getElementById('scan-button');
         const readerDiv = document.getElementById('reader');
         const resultSection = document.getElementById('result-section');
         const statusEl = document.getElementById('status');
-        const scannedDataEl = document.getElementById('scanned-data');
-        const scanAgainButton = document.getElementById('scan-again-button');
+        const resetButton = document.getElementById('reset-button');
+        const displayName = document.getElementById('display-name');
+        const subtitle = document.getElementById('subtitle');
+        const loadingSpinner = document.getElementById('loading-spinner');
 
         let html5QrCode;
+        let currentAction = 'Check In';
+        let employeeId = '';
+        let employeeName = '';
 
-        function startScanner() {
-            actionButtonsDiv.classList.add('hidden');
-            readerDiv.classList.remove('hidden');
-            resultSection.classList.remove('hidden');
-            scanAgainButton.classList.add('hidden');
+        // Check local storage for saved user info
+        if(localStorage.getItem('employeeId')) {
+            employeeIdInput.value = localStorage.getItem('employeeId');
+            employeeNameInput.value = localStorage.getItem('employeeName');
+        }
+
+        continueButton.addEventListener('click', async () => {
+            employeeId = employeeIdInput.value.trim();
+            employeeName = employeeNameInput.value.trim();
+
+            if (!employeeId || !employeeName) {
+                formError.textContent = 'សូមបំពេញទាំង ID និងឈ្មោះបុគ្គលិក។';
+                formError.classList.remove('hidden');
+                return;
+            }
+            formError.classList.add('hidden');
             
-            scannedDataEl.textContent = "";
-            statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-blue-500">កំពុងរៀបចំកាមេរ៉ា...</span>`;
+            // Save info to local storage
+            localStorage.setItem('employeeId', employeeId);
+            localStorage.setItem('employeeName', employeeName);
+
+            // Show spinner while checking status
+            userInfoForm.classList.add('hidden');
+            loadingSpinner.style.display = 'flex';
+
+
+            try {
+                const status = await checkUserStatus(employeeId);
+                updateUiForUser(status);
+            } catch (error) {
+                console.error("Error checking status:", error);
+                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">មិនអាចពិនិត្យស្ថានភាពបានទេ។</span>`;
+                resetToInitialState();
+            } finally {
+                loadingSpinner.style.display = 'none';
+            }
+        });
+
+        function updateUiForUser(status) {
+            userInfoForm.classList.add('hidden');
+            scannerUi.classList.remove('hidden');
+            displayName.textContent = employeeName;
+            
+            if (status.lastAction === 'Checked Out') {
+                subtitle.textContent = "អ្នកបាន Check Out រួចរាល់ហើយសម្រាប់ថ្ងៃនេះ";
+                scanButton.textContent = "បាន Check Out រួចរាល់";
+                scanButton.disabled = true;
+                scanButton.classList.replace('bg-green-500', 'bg-gray-400');
+                scanButton.classList.remove('hover:bg-green-600');
+            } else if (status.lastAction === 'Check In') {
+                currentAction = 'Check Out';
+                subtitle.textContent = "សូមស្កេនដើម្បី Check Out";
+                scanButton.textContent = "ស្កេន Check Out";
+                scanButton.classList.replace('bg-green-500', 'bg-red-500');
+                scanButton.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+            } else { // No record for today
+                currentAction = 'Check In';
+                subtitle.textContent = "សូមស្កេនដើម្បី Check In";
+                scanButton.textContent = "ស្កេន Check In";
+            }
+        }
+
+        scanButton.addEventListener('click', () => {
+            readerDiv.classList.remove('hidden');
+            scanButton.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+            statusEl.innerHTML = 'ស្ថានភាព៖ <span class="font-normal text-blue-500">សូមដាក់កាមេរ៉ាទៅលើ QR Code...</span>';
 
             html5QrCode = new Html5Qrcode("reader");
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
             html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
-            .catch(err => {
-                console.error(`Unable to start scanning, error=${err}`);
-                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">បរាជ័យក្នុងការបើកកាមេរ៉ា។</span>`;
-                resetUI();
-            });
-        }
-        
-        scanButton.addEventListener('click', startScanner);
-        scanAgainButton.addEventListener('click', resetUI);
+                .catch(err => {
+                    console.error(`Unable to start scanning, error=${err}`);
+                    statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">បរាជ័យក្នុងការបើកកាមេរ៉ា។</span>`;
+                    readerDiv.classList.add('hidden');
+                    scanButton.classList.remove('hidden');
+                });
+        });
 
-        function onScanSuccess(decodedText, decodedResult) {
-            html5QrCode.stop().then(() => {
-                console.log("QR Code scanning stopped.");
-                readerDiv.classList.add('hidden');
-                scanAgainButton.classList.remove('hidden');
-            }).catch(err => console.error("Failed to stop scanning.", err));
-            
-            scannedDataEl.textContent = decodedText;
+        async function onScanSuccess(decodedText, decodedResult) {
             statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-yellow-500">ស្កេនបានជោគជ័យ! កំពុងរក្សាទុក...</span>`;
+            readerDiv.classList.add('hidden');
+            
+            await html5QrCode.stop().catch(err => console.error("Failed to stop scanning.", err));
 
-            saveDataToSheet(decodedText);
-        }
+            try {
+                const response = await saveDataToSheet(decodedText);
+                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-green-500">${response.action} បានកត់ត្រាដោយជោគជ័យ!</span>`;
+                scanButton.disabled = true;
+                if(response.action === 'Check Out') {
+                    scanButton.textContent = 'បាន Check Out រួចរាល់';
+                    scanButton.classList.add('bg-gray-400');
+                    scanButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+                } else {
+                     scanButton.textContent = 'បាន Check In រួចរាល់';
+                }
+                 scanButton.classList.remove('hidden');
 
-        function saveDataToSheet(data) {
-            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-                statusEl.innerHTML = 'ស្ថានភាព៖ <span class="font-normal text-red-500">ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមដាក់ URL របស់ Google Apps Script។</span>';
-                return;
-            }
-
-            const payload = {
-                scannedText: data
-            };
-
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
-                console.log('Data sent successfully');
-                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-green-500">វត្តមានត្រូវបានកត់ត្រាដោយជោគជ័យ!</span>`;
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
                 statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">ការរក្សាទុកទិន្នន័យមានបញ្ហា!</span>`;
-            });
+                scanButton.classList.remove('hidden');
+            }
         }
 
-        function resetUI() {
-            actionButtonsDiv.classList.remove('hidden');
+        async function checkUserStatus(id) {
+            const url = new URL(GOOGLE_SCRIPT_URL);
+            url.searchParams.append('action', 'checkStatus');
+            url.searchParams.append('id', id);
+
+            const response = await fetch(url, { method: 'GET', mode: 'cors' });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        }
+
+
+        async function saveDataToSheet(scannedData) {
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec') {
+                throw new Error('ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមដាក់ URL របស់ Google Apps Script។');
+            }
+            
+            const payload = {
+                id: employeeId,
+                name: employeeName,
+                scannedText: scannedData
+            };
+            
+            // Use fetch with cors mode to get the response
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                redirect: 'follow'
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        }
+
+        resetButton.addEventListener('click', resetToInitialState);
+
+        function resetToInitialState() {
+            scannerUi.classList.add('hidden');
+            userInfoForm.classList.remove('hidden');
+            subtitle.textContent = "សូមបញ្ចូលព័ត៌មានរបស់អ្នកដើម្បីបន្ត";
             readerDiv.classList.add('hidden');
             resultSection.classList.add('hidden');
-            scanAgainButton.classList.add('hidden');
-            statusEl.innerHTML = 'ស្ថានភាព៖ <span class="font-normal">កំពុងរង់ចាំ...</span>';
-            scannedDataEl.textContent = "";
+            scanButton.classList.remove('hidden', 'bg-gray-400', 'bg-red-500');
+            scanButton.classList.add('bg-green-500', 'hover:bg-green-600');
+            scanButton.disabled = false;
         }
+
     </script>
 </body>
 </html>
