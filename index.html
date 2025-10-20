@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ប្រព័ន្ធវត្តមានតាម QR Code</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font for Khmer -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body {
+            font-family: 'Kantumruy Pro', sans-serif;
+        }
+        #reader {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        #reader__dashboard_section_csr button {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-radius: 0.375rem !important;
+            padding: 0.5rem 1rem !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg mx-4">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-gray-800">ប្រព័ន្ធស្កេនវត្តមាន QR Code</h1>
+            <p class="text-gray-500 mt-2">ចុចប៊ូតុងស្កេន ដើម្បីកត់ត្រាការចូល-ចេញ</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons" class="mt-6 flex justify-center">
+            <button id="scan-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out w-full max-w-xs">
+                ស្កេនវត្តមាន
+            </button>
+        </div>
+        
+        <!-- QR Code Reader Viewport -->
+        <div id="reader" class="hidden"></div>
+        
+        <!-- Results Section -->
+        <div id="result-section" class="mt-6 hidden">
+            <h2 class="text-lg font-semibold text-gray-700">លទ្ធផល៖</h2>
+            <div class="mt-2 p-4 bg-gray-50 rounded-lg border">
+                <p id="status" class="text-gray-600 font-medium">ស្ថានភាព៖ <span class="font-normal">កំពុងរង់ចាំ...</span></p>
+                <p id="scanned-data" class="text-gray-800 font-bold break-all mt-2"></p>
+            </div>
+             <button id="scan-again-button" class="hidden mt-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out w-full">
+                ស្កេនម្តងទៀត
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // !!! សំខាន់៖ សូមប្តូរ URL ខាងក្រោមនេះជាមួយ Web App URL ពី Google Apps Script របស់អ្នក !!!
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx1yLjSjVNJ8M0houiwc32fJT8Actn7uT3QSQPrIC-GmSB83n97_Y9P4J_Aar1b5YFYzw/exec';
+
+        const actionButtonsDiv = document.getElementById('action-buttons');
+        const scanButton = document.getElementById('scan-button');
+        const readerDiv = document.getElementById('reader');
+        const resultSection = document.getElementById('result-section');
+        const statusEl = document.getElementById('status');
+        const scannedDataEl = document.getElementById('scanned-data');
+        const scanAgainButton = document.getElementById('scan-again-button');
+
+        let html5QrCode;
+
+        function startScanner() {
+            actionButtonsDiv.classList.add('hidden');
+            readerDiv.classList.remove('hidden');
+            resultSection.classList.remove('hidden');
+            scanAgainButton.classList.add('hidden');
+            
+            scannedDataEl.textContent = "";
+            statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-blue-500">កំពុងរៀបចំកាមេរ៉ា...</span>`;
+
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+            .catch(err => {
+                console.error(`Unable to start scanning, error=${err}`);
+                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">បរាជ័យក្នុងការបើកកាមេរ៉ា។</span>`;
+                resetUI();
+            });
+        }
+        
+        scanButton.addEventListener('click', startScanner);
+        scanAgainButton.addEventListener('click', resetUI);
+
+        function onScanSuccess(decodedText, decodedResult) {
+            html5QrCode.stop().then(() => {
+                console.log("QR Code scanning stopped.");
+                readerDiv.classList.add('hidden');
+                scanAgainButton.classList.remove('hidden');
+            }).catch(err => console.error("Failed to stop scanning.", err));
+            
+            scannedDataEl.textContent = decodedText;
+            statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-yellow-500">ស្កេនបានជោគជ័យ! កំពុងរក្សាទុក...</span>`;
+
+            saveDataToSheet(decodedText);
+        }
+
+        function saveDataToSheet(data) {
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                statusEl.innerHTML = 'ស្ថានភាព៖ <span class="font-normal text-red-500">ការកំណត់រចនាសម្ព័ន្ធបរាជ័យ! សូមដាក់ URL របស់ Google Apps Script។</span>';
+                return;
+            }
+
+            const payload = {
+                scannedText: data
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                console.log('Data sent successfully');
+                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-green-500">វត្តមានត្រូវបានកត់ត្រាដោយជោគជ័យ!</span>`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                statusEl.innerHTML = `ស្ថានភាព៖ <span class="font-normal text-red-500">ការរក្សាទុកទិន្នន័យមានបញ្ហា!</span>`;
+            });
+        }
+
+        function resetUI() {
+            actionButtonsDiv.classList.remove('hidden');
+            readerDiv.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            scanAgainButton.classList.add('hidden');
+            statusEl.innerHTML = 'ស្ថានភាព៖ <span class="font-normal">កំពុងរង់ចាំ...</span>';
+            scannedDataEl.textContent = "";
+        }
+    </script>
+</body>
+</html>
+
